@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Endless Runner Game</title>
+    <style>
+        /* Add your CSS styles here */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+        
+        canvas {
+            border: 1px solid #000;
+        }
+        
+        #score {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        #buttons {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+    <div id="score">Score: 0</div>
+    <div id="buttons">
+        <button onclick="startGame()">Start</button>
+        <button onclick="pauseGame()">Pause</button>
+        <button onclick="resetGame()">Reset</button>
+    </div>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        const playerImg = new Image();
+        playerImg.src = 'https://i.postimg.cc/LgB74DWZ/player.png'; // Player image URL
+
+        const obstacleImg = new Image();
+        obstacleImg.src = 'https://i.postimg.cc/p5t4t4sH/obstacle.png'; // Obstacle image URL
+
+        const backgroundImage = new Image();
+        backgroundImage.src = 'https://i.postimg.cc/njspLyK9/background.jpg'; // Background image URL
+
+        let playerY = canvas.height / 2;
+        const playerWidth = 50; // Adjust player width as per the image
+        const playerHeight = 50; // Adjust player height as per the image
+
+        const obstacles = [];
+        let score = 0;
+
+        let gameRunning = false;
+        let animationId;
+
+        function startGame() {
+            if (!gameRunning) {
+                gameRunning = true;
+                gameLoop();
+            }
+        }
+
+        function pauseGame() {
+            if (gameRunning) {
+                gameRunning = false;
+                cancelAnimationFrame(animationId);
+            }
+        }
+
+        function resetGame() {
+            playerY = canvas.height / 2;
+            obstacles.length = 0;
+            score = 0;
+            document.getElementById("score").innerText = "Score: 0";
+            gameRunning = false;
+            cancelAnimationFrame(animationId);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawBackground();
+            drawPlayer();
+        }
+
+        function drawBackground() {
+            ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+        }
+
+        function drawPlayer() {
+            ctx.drawImage(playerImg, 50, playerY, playerWidth, playerHeight);
+        }
+
+        function createObstacle() {
+            const obstacle = {
+                x: canvas.width,
+                y: Math.random() * (canvas.height - 100),
+                width: 50, // Adjust obstacle width as per the image
+                height: 100, // Adjust obstacle height as per the image
+                speed: 3,
+            };
+            obstacles.push(obstacle);
+        }
+
+        function drawObstacles() {
+            for (let i = 0; i < obstacles.length; i++) {
+                ctx.drawImage(obstacleImg, obstacles[i].x, obstacles[i].y, obstacles[i].width, obstacles[i].height);
+            }
+        }
+
+        function moveObstacles() {
+            for (let i = 0; i < obstacles.length; i++) {
+                obstacles[i].x -= obstacles[i].speed;
+            }
+        }
+
+        function handleMouseScroll(event) {
+            const deltaY = event.deltaY;
+
+            if (deltaY < 0) {
+                playerY -= 20; // Move up
+            } else {
+                playerY += 20; // Move down
+            }
+        }
+
+        function checkCollisions() {
+            for (let i = 0; i < obstacles.length; i++) {
+                if (
+                    50 < obstacles[i].x + obstacles[i].width &&
+                    50 + playerWidth > obstacles[i].x &&
+                    playerY < obstacles[i].y + obstacles[i].height &&
+                    playerY + playerHeight > obstacles[i].y
+                ) {
+                    // Reset the game if collision detected
+                    alert("Game Over! You collided with an obstacle. Your score: " + score);
+                    score = 0;
+                    playerY = canvas.height / 2;
+                    obstacles.length = 0;
+                }
+            }
+        }
+
+        function updateScore() {
+            score++;
+            document.getElementById("score").innerText = "Score: " + score;
+        }
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            drawBackground();
+            drawPlayer();
+
+            moveObstacles();
+            drawObstacles();
+
+            checkCollisions();
+
+            if (Math.random() < 0.02) {
+                createObstacle();
+            }
+
+            updateScore();
+
+            if (gameRunning) {
+                animationId = requestAnimationFrame(gameLoop);
+            }
+        }
+
+        canvas.addEventListener("wheel", handleMouseScroll);
+
+    </script>
+</body>
+</html>
